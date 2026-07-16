@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>Rosco Correntino — Puntos turísticos de Corrientes</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
+:root{
+  --bg-deep:#0E2C27;
+  --bg-panel:#153D36;
+  --bg-panel-2:#1B4941;
+  --water:#2E6F67;
+  --amber:#E8A33D;
+  --amber-soft:#F0C077;
+  --p2:#4FA8C9;
+  --p2-soft:#A9DCEC;
+  --correct:#6FA95C;
+  --correct-soft:#B7D9A9;
+  --wrong:#C1503B;
+  --wrong-soft:#E7A896;
+  --cream:#F3EEDF;
+  --muted:#A9C4B9;
+  --ring-size: min(94vw, 560px);
+}
+
+*{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+html,body{
+  margin:0;
+  min-height:100vh;
+  min-height:100dvh;
+  background:
+    radial-gradient(ellipse at 50% -10%, #1E5049 0%, transparent 60%),
+    var(--bg-deep);
+  color:var(--cream);
+  font-family:'Space Grotesk', sans-serif;
+  overflow-x:hidden;
+  touch-action:manipulation;
+}
+
+.app{
+  max-width:900px;
+  margin:0 auto;
+  padding:calc(20px + env(safe-area-inset-top)) 16px calc(40px + env(safe-area-inset-bottom));
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:18px;
+}
+
+.header{ text-align:center; }
+
+.eyebrow{
+  letter-spacing:.16em;
+  text-transform:uppercase;
+  font-size:.7rem;
+  color:var(--amber-soft);
+  font-weight:600;
+}
+
+h1{
+  font-family:'Fraunces', serif;
+  font-weight:600;
+  font-size:clamp(1.6rem, 6vw, 2.6rem);
+  margin:.25em 0 .1em;
+  color:var(--cream);
+}
+
+.subtitle{
+  color:var(--muted);
+  font-size:.9rem;
+  max-width:520px;
+  margin:0 auto;
+}
+
+/* ---------- Pantalla de configuración ---------- */
+.setup-card{
+  width:100%;
+  max-width:440px;
+  background:var(--bg-panel);
+  border:1px solid rgba(243,238,223,.08);
+  border-radius:20px;
+  padding:24px 22px;
+  display:flex;
+  flex-direction:column;
+  gap:16px;
+}
+.setup-label{
+  font-size:.75rem;
+  text-transform:uppercase;
+  letter-spacing:.1em;
+  color:var(--muted);
+  font-weight:600;
+}
+.mode-toggle{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.mode-btn{
+  background:var(--bg-panel-2);
+  border:2px solid rgba(243,238,223,.1);
+  color:var(--cream);
+  border-radius:14px;
+  padding:14px 8px;
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:.9rem;
+  cursor:pointer;
+}
+.mode-btn.selected{ border-color:var(--amber); background:rgba(232,163,61,.14); color:var(--amber-soft); }
+
+.name-inputs{ display:flex; flex-direction:column; gap:10px; }
+.name-inputs.hidden{ display:none; }
+.name-field{ display:flex; align-items:center; gap:10px; }
+.name-dot{ width:12px; height:12px; border-radius:50%; flex:none; }
+.name-dot.p1{ background:var(--amber); }
+.name-dot.p2{ background:var(--p2); }
+.name-field input{
+  flex:1;
+  min-width:0;
+  background:var(--bg-panel-2);
+  border:1px solid rgba(243,238,223,.16);
+  color:var(--cream);
+  font-family:'Space Grotesk', sans-serif;
+  font-size:16px;
+  padding:12px 14px;
+  border-radius:10px;
+  outline:none;
+}
+.name-field input:focus{ border-color:var(--amber); }
+
+.btn-start{
+  background:var(--amber);
+  color:#1B2E1E;
+  border:none;
+  border-radius:12px;
+  padding:14px 20px;
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:700;
+  font-size:1rem;
+  cursor:pointer;
+}
+.btn-start:active{ transform:scale(.98); }
+
+.game-area{ display:none; flex-direction:column; align-items:center; gap:18px; width:100%; }
+.game-area.show{ display:flex; }
+
+/* ---------- HUD ---------- */
+.hud{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  width:100%;
+}
+
+.hud-chip{
+  background:var(--bg-panel);
+  border:1px solid rgba(243,238,223,.08);
+  border-radius:999px;
+  padding:8px 14px;
+  font-size:.8rem;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  white-space:nowrap;
+}
+.hud-chip .val{ font-weight:700; color:var(--amber); font-variant-numeric:tabular-nums; }
+.hud-chip.timer .val{ color:var(--correct-soft); }
+.hud-chip.timer.low .val{ color:var(--wrong); }
+.hud-chip.player{ border-width:2px; border-style:solid; border-color:transparent; transition:border-color .2s ease, background .2s ease; }
+.hud-chip.player.p1-active{ border-color:var(--amber); background:rgba(232,163,61,.12); }
+.hud-chip.player.p2-active{ border-color:var(--p2); background:rgba(79,168,201,.14); }
+.hud-chip.player .val.p1{ color:var(--amber); }
+.hud-chip.player .val.p2{ color:var(--p2-soft); }
+
+.turn-banner{
+  font-family:'Fraunces', serif;
+  font-size:clamp(1rem, 3.4vw, 1.25rem);
+  font-weight:600;
+  padding:6px 18px;
+  border-radius:999px;
+  background:var(--bg-panel-2);
+  display:none;
+  align-items:center;
+  gap:8px;
+}
+.turn-banner.show{ display:inline-flex; }
+.turn-banner .dot{ width:10px; height:10px; border-radius:50%; }
+.turn-banner.p1 .dot{ background:var(--amber); }
+.turn-banner.p1{ color:var(--amber-soft); }
+.turn-banner.p2 .dot{ background:var(--p2); }
+.turn-banner.p2{ color:var(--p2-soft); }
+
+/* ---------- Rosco ---------- */
+.rosco-wrap{
+  position:relative;
+  width:var(--ring-size);
+  aspect-ratio:1/1;
+  margin-top:2px;
+}
+
+.water-bg{
+  position:absolute;
+  inset:6%;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(232,163,61,.10), transparent 55%),
+    radial-gradient(circle at 65% 70%, rgba(46,111,103,.5), transparent 60%),
+    var(--bg-panel);
+  box-shadow: inset 0 0 40px rgba(0,0,0,.35);
+}
+
+.letter-tile{
+  position:absolute;
+  width:11.5%;
+  aspect-ratio:1/1;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'Fraunces', serif;
+  font-weight:700;
+  font-size:clamp(.8rem, 2.6vw, 1.15rem);
+  background:var(--bg-panel-2);
+  border:2px solid rgba(243,238,223,.14);
+  color:var(--muted);
+  transition:transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+
+.letter-tile.active{
+  background:var(--amber);
+  border-color:var(--amber-soft);
+  color:#1B2E1E;
+  transform:translate(-50%,-50%) scale(1.18);
+  box-shadow:0 0 0 6px rgba(232,163,61,.18), 0 0 22px rgba(232,163,61,.5);
+}
+.letter-tile.active.turn-p2{
+  background:var(--p2);
+  border-color:var(--p2-soft);
+  box-shadow:0 0 0 6px rgba(79,168,201,.2), 0 0 22px rgba(79,168,201,.5);
+}
+.letter-tile.correct{ background:var(--correct); border-color:var(--correct-soft); color:#0E2C27; }
+.letter-tile.wrong{ background:var(--wrong); border-color:var(--wrong-soft); color:#2A0E0A; }
+.letter-tile.passed{ background:var(--bg-panel); border-color:var(--amber); color:var(--amber-soft); border-style:dashed; }
+
+.center-card{
+  position:absolute;
+  inset:20%;
+  border-radius:clamp(18px, 4vw, 30px);
+  background:var(--bg-deep);
+  border:1px solid rgba(243,238,223,.08);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  padding:7% 6%;
+  text-align:center;
+  overflow:auto;
+}
+
+.clue-badge{
+  font-size:.65rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:#1B2E1E;
+  background:var(--amber);
+  padding:4px 12px;
+  border-radius:999px;
+  font-weight:700;
+}
+.clue-badge.p2{ background:var(--p2); }
+
+.clue-letter{
+  font-family:'Fraunces', serif;
+  font-size:clamp(1.4rem,4.2vw,2.1rem);
+  font-weight:700;
+  color:var(--cream);
+  line-height:1;
+}
+
+.clue-text{
+  font-size:clamp(.7rem, 2vw, .85rem);
+  color:var(--muted);
+  line-height:1.35;
+}
+
+.answer-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  width:100%;
+  max-width:520px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+
+input#answer{
+  flex:1 1 180px;
+  min-width:0;
+  background:var(--bg-panel);
+  border:1px solid rgba(243,238,223,.16);
+  color:var(--cream);
+  font-family:'Space Grotesk', sans-serif;
+  font-size:16px;
+  padding:11px 14px;
+  border-radius:12px;
+  outline:none;
+}
+input#answer:focus{ border-color:var(--amber); box-shadow:0 0 0 3px rgba(232,163,61,.18); }
+
+button{
+  font-family:'Space Grotesk', sans-serif;
+  font-weight:600;
+  font-size:.88rem;
+  border:none;
+  border-radius:12px;
+  padding:11px 16px;
+  cursor:pointer;
+  transition:transform .15s ease, filter .15s ease;
+  touch-action:manipulation;
+}
+button:active{ transform:scale(.96); }
+button:focus-visible{ outline:2px solid var(--amber); outline-offset:2px; }
+
+.btn-check{ background:var(--correct); color:#0E2C27; }
+.btn-check:hover{ filter:brightness(1.08); }
+.btn-pass{ background:transparent; border:1px solid rgba(243,238,223,.28); color:var(--cream); }
+.btn-pass:hover{ border-color:var(--amber); color:var(--amber-soft); }
+
+.feedback{
+  min-height:1.2em;
+  font-size:.82rem;
+  font-weight:600;
+}
+.feedback.correct{ color:var(--correct-soft); }
+.feedback.wrong{ color:var(--wrong-soft); }
+
+.legend{
+  display:flex; gap:16px; flex-wrap:wrap; justify-content:center;
+  font-size:.72rem; color:var(--muted);
+}
+.legend span{ display:inline-flex; align-items:center; gap:6px; }
+.dot{ width:10px; height:10px; border-radius:50%; display:inline-block; }
+.dot.a{ background:var(--amber); }
+.dot.c{ background:var(--correct); }
+.dot.w{ background:var(--wrong); }
+.dot.p{ background:var(--bg-panel-2); border:1px dashed var(--amber); }
+
+.end-screen{
+  width:100%;
+  max-width:640px;
+  background:var(--bg-panel);
+  border-radius:20px;
+  padding:26px 20px;
+  border:1px solid rgba(243,238,223,.08);
+  display:none;
+  flex-direction:column;
+  gap:16px;
+}
+.end-screen.show{ display:flex; }
+
+.end-score{
+  font-family:'Fraunces', serif;
+  font-size:1.9rem;
+  color:var(--amber);
+  text-align:center;
+}
+.end-score small{ display:block; font-family:'Space Grotesk',sans-serif; font-size:.78rem; color:var(--muted); font-weight:500; }
+
+.end-scores-2p{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+.end-score-box{
+  background:var(--bg-panel-2);
+  border-radius:14px;
+  padding:14px 10px;
+  text-align:center;
+  border:2px solid transparent;
+}
+.end-score-box.winner{ border-color:var(--amber); }
+.end-score-box .name{ font-size:.78rem; color:var(--muted); margin-bottom:4px; }
+.end-score-box .pts{ font-family:'Fraunces',serif; font-size:1.6rem; color:var(--cream); }
+.end-winner-line{ text-align:center; font-weight:700; color:var(--amber-soft); font-family:'Fraunces',serif; font-size:1.15rem; }
+
+.review-list{
+  display:flex; flex-direction:column; gap:6px;
+  max-height:320px; overflow:auto;
+  padding-right:4px;
+}
+.review-item{
+  display:grid;
+  grid-template-columns:26px 1fr;
+  gap:10px;
+  align-items:start;
+  padding:9px 11px;
+  border-radius:10px;
+  background:var(--bg-panel-2);
+  font-size:.8rem;
+}
+.review-item .badge{
+  width:24px; height:24px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-family:'Fraunces',serif; font-size:.8rem;
+}
+.review-item.correct .badge{ background:var(--correct); color:#0E2C27; }
+.review-item.wrong .badge{ background:var(--wrong); color:#2A0E0A; }
+.review-item.passed .badge{ background:transparent; border:1px dashed var(--amber); color:var(--amber-soft); }
+.review-item .ans{ color:var(--muted); }
+.review-item .ans b{ color:var(--cream); }
+.review-item .who{ font-size:.7rem; color:var(--amber-soft); font-weight:700; }
+.review-item .who.p2{ color:var(--p2-soft); }
+
+.replay-btn{
+  align-self:center;
+  background:var(--amber);
+  color:#1B2E1E;
+}
+
+@media (max-width:480px){
+  .letter-tile{ width:12.5%; }
+  .center-card{ inset:17%; padding:6% 5%; }
+  .hud-chip{ font-size:.74rem; padding:7px 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="eyebrow">Rosco Correntino</div>
+    <h1>Puntos turísticos de Corrientes</h1>
+    <p class="subtitle">Recorré el rosco y adiviná lugares, personajes y tradiciones emblemáticas de la provincia de Corrientes antes de que se acabe el tiempo.</p>
+  </div>
+
+  <!-- ---------- Configuración inicial ---------- -->
+  <div class="setup-card" id="setupCard">
+    <div>
+      <div class="setup-label">Modo de juego</div>
+      <div class="mode-toggle">
+        <button class="mode-btn selected" id="modeSolo" type="button">1 Jugador</button>
+        <button class="mode-btn" id="modeDuo" type="button">2 Jugadores</button>
+      </div>
+    </div>
+
+    <div id="nameInputs" class="name-inputs hidden">
+      <div class="name-field">
+        <span class="name-dot p1"></span>
+        <input id="p1Name" type="text" placeholder="Nombre jugador 1" maxlength="16" autocomplete="off">
+      </div>
+      <div class="name-field">
+        <span class="name-dot p2"></span>
+        <input id="p2Name" type="text" placeholder="Nombre jugador 2" maxlength="16" autocomplete="off">
+      </div>
+    </div>
+
+    <button class="btn-start" id="btnStart" type="button">Comenzar</button>
+  </div>
+
+  <!-- ---------- Juego ---------- -->
+  <div class="game-area" id="gameArea">
+    <div class="hud" id="hud"></div>
+    <div class="turn-banner" id="turnBanner"><span class="dot"></span><span id="turnName"></span></div>
+
+    <div class="rosco-wrap" id="roscoWrap">
+      <div class="water-bg"></div>
+      <div class="center-card" id="centerCard">
+        <div class="clue-badge" id="clueBadge">Empieza por</div>
+        <div class="clue-letter" id="clueLetter">A</div>
+        <div class="clue-text" id="clueText">Cargando…</div>
+        <div class="answer-row">
+          <input id="answer" type="text" placeholder="Escribí tu respuesta…" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+          <button class="btn-check" id="btnCheck" type="button">Responder</button>
+          <button class="btn-pass" id="btnPass" type="button">Pasapalabra</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+      </div>
+    </div>
+
+    <div class="legend">
+      <span><i class="dot a"></i>Activa</span>
+      <span><i class="dot c"></i>Correcta</span>
+      <span><i class="dot w"></i>Incorrecta</span>
+      <span><i class="dot p"></i>Pasapalabra</span>
+    </div>
+
+    <div class="end-screen" id="endScreen">
+      <div id="endScoreSingle"></div>
+      <div id="endScoreDuo"></div>
+      <div class="review-list" id="reviewList"></div>
+      <button class="replay-btn" id="btnReplay" type="button">Jugar de nuevo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const preguntas = [
+  {letra:'A', tipo:'empieza', pista:'Cánido silvestre de melena rojiza que habita en los Esteros del Iberá y el Parque Nacional Mburucuyá.', respuesta:'aguara guazu', alternativas:['aguara-guazu','aguarazu']},
+  {letra:'B', tipo:'empieza', pista:'Templo mariano dedicado a la patrona de la provincia, ubicado a 8 km de la capital.', respuesta:'basilica de itati', alternativas:['basilica itati']},
+  {letra:'C', tipo:'empieza', pista:'Fiesta de verano con desfiles, comparsas y corsódromo, una de las más importantes del país.', respuesta:'carnaval', alternativas:['carnaval de corrientes','carnaval correntino']},
+  {letra:'D', tipo:'empieza', pista:'Pez de gran porte, protagonista de una fiesta nacional de pesca deportiva en Paso de la Patria.', respuesta:'dorado', alternativas:['el dorado']},
+  {letra:'E', tipo:'empieza', pista:'Humedal protegido considerado uno de los reservorios de agua dulce más importantes del mundo.', respuesta:'esteros del ibera', alternativas:['esteros ibera','ibera','parque nacional ibera']},
+  {letra:'F', tipo:'contiene', pista:'Antiguo convento y parroquia dedicados a un santo, en el centro de la ciudad de Corrientes.', respuesta:'convento san francisco solano', alternativas:['convento de san francisco','parroquia san francisco solano','san francisco solano']},
+  {letra:'G', tipo:'contiene', pista:'Felino más grande de América, en recuperación gracias a proyectos de reintroducción en el Iberá.', respuesta:'yaguarete', alternativas:['jaguar']},
+  {letra:'H', tipo:'contiene', pista:'Género musical y danza litoraleña declarada Patrimonio Cultural Inmaterial de la Humanidad.', respuesta:'chamame', alternativas:[]},
+  {letra:'I', tipo:'empieza', pista:'Ciudad conocida por sus aguas termales, cercana a la represa de Yacyretá.', respuesta:'ituzaingo', alternativas:[]},
+  {letra:'J', tipo:'contiene', pista:'Recorrido histórico por antiguas misiones religiosas coloniales de la región.', respuesta:'ruta de los jesuitas', alternativas:['ruta jesuitica','ruta de los jesuítas']},
+  {letra:'K', tipo:'contiene', pista:'Unidad de longitud: la Costanera de la capital mide 3,5 de estas.', respuesta:'kilometros', alternativas:['km']},
+  {letra:'L', tipo:'empieza', pista:'Principal espejo de agua del sistema de esteros, corazón del Parque Iberá.', respuesta:'laguna ibera', alternativas:[]},
+  {letra:'M', tipo:'empieza', pista:'Flor y fruto tropical que da nombre a un parque nacional con 111 lagunas.', respuesta:'mburucuya', alternativas:[]},
+  {letra:'N', tipo:'contiene', pista:'Festival de enero dedicado al género musical litoraleño más representativo de la provincia.', respuesta:'fiesta nacional del chamame', alternativas:['fiesta nacional del chamamé']},
+  {letra:'O', tipo:'contiene', pista:'Paseo de 3,5 km sobre el río Paraná, con vista al Puente General Belgrano.', respuesta:'costanera', alternativas:['costanera de corrientes']},
+  {letra:'P', tipo:'empieza', pista:'Balneario sobre el Paraná, sede de la Fiesta Nacional de Pesca del Dorado.', respuesta:'paso de la patria', alternativas:[]},
+  {letra:'Q', tipo:'contiene', pista:'Área protegida de 17.600 hectáreas dedicada a una flor, con el Estero de Santa Lucía en su interior.', respuesta:'parque nacional mburucuya', alternativas:['parque mburucuya']},
+  {letra:'R', tipo:'empieza', pista:'Río que bordea la provincia al norte y al oeste, escenario de la pesca deportiva.', respuesta:'rio parana', alternativas:['parana']},
+  {letra:'S', tipo:'empieza', pista:'Ciudad correntina fronteriza con Brasil, conocida por su carnaval.', respuesta:'santo tome', alternativas:[]},
+  {letra:'T', tipo:'empieza', pista:'Complejo de aguas termales para el relax, ubicado en Ituzaingó.', respuesta:'termas de ituzaingo', alternativas:['termas ituzaingo']},
+  {letra:'U', tipo:'empieza', pista:'Río que hace de límite este de la provincia, con el mismo nombre que el país vecino.', respuesta:'uruguay', alternativas:['rio uruguay']},
+  {letra:'V', tipo:'empieza', pista:'Advocación mariana, patrona de la provincia de Corrientes.', respuesta:'virgen de itati', alternativas:[]},
+  {letra:'Y', tipo:'empieza', pista:'Represa hidroeléctrica binacional entre Argentina y Paraguay, cercana a Ituzaingó.', respuesta:'yacyreta', alternativas:[]},
+];
+
+const TOTAL_TIME = 180;
+let state = {};
+let mode = 1; // 1 o 2 jugadores
+
+/* ---------- Configuración ---------- */
+const modeSolo = document.getElementById('modeSolo');
+const modeDuo = document.getElementById('modeDuo');
+const nameInputs = document.getElementById('nameInputs');
+
+modeSolo.addEventListener('click', ()=>{
+  mode = 1;
+  modeSolo.classList.add('selected');
+  modeDuo.classList.remove('selected');
+  nameInputs.classList.add('hidden');
+});
+modeDuo.addEventListener('click', ()=>{
+  mode = 2;
+  modeDuo.classList.add('selected');
+  modeSolo.classList.remove('selected');
+  nameInputs.classList.remove('hidden');
+});
+
+document.getElementById('btnStart').addEventListener('click', ()=>{
+  const p1 = document.getElementById('p1Name').value.trim() || 'Jugador 1';
+  const p2 = document.getElementById('p2Name').value.trim() || 'Jugador 2';
+  document.getElementById('setupCard').style.display = 'none';
+  document.getElementById('gameArea').classList.add('show');
+  initGame(mode, [p1, mode === 2 ? p2 : null]);
+});
+
+function normalize(str){
+  return str
+    .toString()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .toLowerCase()
+    .replace(/^(el|la|los|las|un|una)\s+/,'')
+    .replace(/[^a-z0-9\s]/g,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function buildRing(){
+  const wrap = document.getElementById('roscoWrap');
+  document.querySelectorAll('.letter-tile').forEach(el=>el.remove());
+  const n = preguntas.length;
+  const radius = 41;
+  preguntas.forEach((q, i)=>{
+    const angle = (i / n) * 2 * Math.PI - Math.PI/2;
+    const x = 50 + radius * Math.cos(angle);
+    const y = 50 + radius * Math.sin(angle);
+    const tile = document.createElement('div');
+    tile.className = 'letter-tile';
+    tile.id = 'tile-' + i;
+    tile.style.left = x + '%';
+    tile.style.top = y + '%';
+    tile.textContent = q.letra;
+    wrap.appendChild(tile);
+  });
+}
+
+function buildHud(){
+  const hud = document.getElementById('hud');
+  if(state.mode === 1){
+    hud.innerHTML = `
+      <div class="hud-chip timer" id="timerChip"><span>⏱</span><span class="val" id="timerVal">3:00</span></div>
+      <div class="hud-chip"><span>✔</span><span class="val" id="scoreVal">0</span></div>
+      <div class="hud-chip"><span>Restantes</span><span class="val" id="remVal">${preguntas.length}</span></div>
+    `;
+  } else {
+    hud.innerHTML = `
+      <div class="hud-chip timer" id="timerChip"><span>⏱</span><span class="val" id="timerVal">3:00</span></div>
+      <div class="hud-chip player" id="chipP1"><span>${state.players[0]}</span><span class="val p1" id="scoreP1">0</span></div>
+      <div class="hud-chip player" id="chipP2"><span>${state.players[1]}</span><span class="val p2" id="scoreP2">0</span></div>
+      <div class="hud-chip"><span>Restantes</span><span class="val" id="remVal">${preguntas.length}</span></div>
+    `;
+  }
+}
+
+function initGame(gameMode, players){
+  const n = preguntas.length;
+  const startIdx = Math.floor(Math.random() * n);
+  let order = [];
+  for(let i=0;i<n;i++) order.push((startIdx + i) % n);
+
+  state = {
+    mode: gameMode,
+    players: players,
+    scores: [0, 0],
+    turn: 0,
+    queue: order,
+    results: {},
+    timeLeft: TOTAL_TIME,
+    timerId: null,
+    ended: false
+  };
+  preguntas.forEach((q,i)=>{ state.results[i] = 'pending'; });
+
+  document.getElementById('endScreen').classList.remove('show');
+  document.getElementById('answer').disabled = false;
+  document.getElementById('btnCheck').disabled = false;
+  document.getElementById('btnPass').disabled = false;
+
+  buildHud();
+  buildRing();
+  updateTurnBanner();
+  updateHud();
+  renderCurrentClue();
+
+  clearInterval(state.timerId);
+  state.timerId = setInterval(tick, 1000);
+}
+
+function tick(){
+  if(state.ended) return;
+  state.timeLeft--;
+  updateHud();
+  if(state.timeLeft <= 0){
+    endGame();
+  }
+}
+
+function updateTurnBanner(){
+  const banner = document.getElementById('turnBanner');
+  if(state.mode !== 2){
+    banner.classList.remove('show');
+    return;
+  }
+  banner.classList.add('show');
+  banner.classList.remove('p1','p2');
+  banner.classList.add(state.turn === 0 ? 'p1' : 'p2');
+  document.getElementById('turnName').textContent = 'Turno de ' + state.players[state.turn];
+}
+
+function updateHud(){
+  const timerVal = document.getElementById('timerVal');
+  const m = Math.floor(state.timeLeft/60);
+  const s = String(state.timeLeft%60).padStart(2,'0');
+  timerVal.textContent = `${m}:${s}`;
+  document.getElementById('timerChip').classList.toggle('low', state.timeLeft <= 30);
+  document.getElementById('remVal').textContent = state.queue.length;
+
+  if(state.mode === 1){
+    document.getElementById('scoreVal').textContent = state.scores[0];
+  } else {
+    document.getElementById('scoreP1').textContent = state.scores[0];
+    document.getElementById('scoreP2').textContent = state.scores[1];
+    document.getElementById('chipP1').classList.toggle('p1-active', state.turn === 0);
+    document.getElementById('chipP2').classList.toggle('p2-active', state.turn === 1);
+  }
+
+  Object.keys(state.results).forEach(i=>{
+    const tile = document.getElementById('tile-'+i);
+    if(!tile) return;
+    tile.classList.remove('active','correct','wrong','passed','turn-p2');
+    const r = state.results[i];
+    if(r==='correct') tile.classList.add('correct');
+    else if(r==='wrong') tile.classList.add('wrong');
+    else if(r==='passed') tile.classList.add('passed');
+  });
+
+  if(state.queue.length){
+    const activeTile = document.getElementById('tile-'+state.queue[0]);
+    if(activeTile){
+      activeTile.classList.add('active');
+      if(state.mode === 2 && state.turn === 1) activeTile.classList.add('turn-p2');
+    }
+  }
+}
+
+function renderCurrentClue(){
+  const feedback = document.getElementById('feedback');
+  feedback.textContent = '';
+  feedback.className = 'feedback';
+  document.getElementById('answer').value = '';
+
+  if(!state.queue.length){ endGame(); return; }
+  const idx = state.queue[0];
+  const q = preguntas[idx];
+
+  const badge = document.getElementById('clueBadge');
+  badge.textContent =
+    q.tipo === 'empieza' ? 'Empieza por ' + q.letra :
+    q.tipo === 'contiene' ? 'Contiene la ' + q.letra :
+    'Termina en ' + q.letra;
+  badge.classList.toggle('p2', state.mode === 2 && state.turn === 1);
+
+  document.getElementById('clueLetter').textContent = q.letra;
+  document.getElementById('clueText').textContent = q.pista;
+  updateTurnBanner();
+  updateHud();
+
+  // En mobile evitamos el foco automático para no disparar el teclado sin que el usuario lo pida
+  if(window.matchMedia('(min-width: 768px)').matches){
+    document.getElementById('answer').focus();
+  }
+}
+
+function passTurn(){
+  if(state.mode === 2){
+    state.turn = state.turn === 0 ? 1 : 0;
+  }
+}
+
+function checkAnswer(){
+  if(state.ended || !state.queue.length) return;
+  const idx = state.queue[0];
+  const q = preguntas[idx];
+  const userVal = normalize(document.getElementById('answer').value);
+  const validAnswers = [q.respuesta, ...(q.alternativas||[])].map(normalize);
+
+  const isCorrect = userVal.length > 1 && validAnswers.includes(userVal);
+  const feedback = document.getElementById('feedback');
+  const activePlayer = state.turn;
+
+  if(isCorrect){
+    state.results[idx] = 'correct';
+    state.scores[activePlayer] += 10;
+    feedback.textContent = '¡Correcto! +10 puntos' + (state.mode===2 ? ' para ' + state.players[activePlayer] : '');
+    feedback.className = 'feedback correct';
+  } else {
+    state.results[idx] = 'wrong';
+    feedback.textContent = 'Incorrecto. Respuesta: ' + capitalize(q.respuesta);
+    feedback.className = 'feedback wrong';
+  }
+  state.queue.shift();
+  passTurn();
+
+  updateHud();
+  setTimeout(()=>{
+    if(!state.ended) renderCurrentClue();
+  }, 900);
+}
+
+function passAnswer(){
+  if(state.ended || !state.queue.length) return;
+  const idx = state.queue.shift();
+  state.results[idx] = 'passed';
+  state.queue.push(idx);
+  passTurn();
+  updateHud();
+  renderCurrentClue();
+}
+
+function capitalize(s){
+  return s.replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function endGame(){
+  state.ended = true;
+  clearInterval(state.timerId);
+  document.getElementById('answer').disabled = true;
+  document.getElementById('btnCheck').disabled = true;
+  document.getElementById('btnPass').disabled = true;
+
+  const single = document.getElementById('endScoreSingle');
+  const duo = document.getElementById('endScoreDuo');
+
+  if(state.mode === 1){
+    duo.innerHTML = '';
+    single.innerHTML = `<div class="end-score">${state.scores[0]}<small>puntos</small></div>`;
+  } else {
+    single.innerHTML = '';
+    const p1win = state.scores[0] > state.scores[1];
+    const p2win = state.scores[1] > state.scores[0];
+    const tie = state.scores[0] === state.scores[1];
+    let winnerLine = tie
+      ? '¡Empate!'
+      : (p1win ? '🏆 ' + state.players[0] + ' gana' : '🏆 ' + state.players[1] + ' gana');
+    duo.innerHTML = `
+      <div class="end-winner-line">${winnerLine}</div>
+      <div class="end-scores-2p">
+        <div class="end-score-box ${p1win ? 'winner' : ''}">
+          <div class="name">${state.players[0]}</div>
+          <div class="pts">${state.scores[0]}</div>
+        </div>
+        <div class="end-score-box ${p2win ? 'winner' : ''}">
+          <div class="name">${state.players[1]}</div>
+          <div class="pts">${state.scores[1]}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  preguntas.forEach((q,i)=>{
+    const status = state.results[i] === 'correct' ? 'correct' : (state.results[i] === 'wrong' ? 'wrong' : 'passed');
+    const row = document.createElement('div');
+    row.className = 'review-item ' + status;
+    const icon = status === 'correct' ? '✔' : status === 'wrong' ? '✕' : q.letra;
+    row.innerHTML = `<div class="badge">${icon}</div>
+      <div class="ans"><b>${q.letra}.</b> ${q.pista}<br><b>${capitalize(q.respuesta)}</b></div>`;
+    list.appendChild(row);
+  });
+
+  document.getElementById('endScreen').classList.add('show');
+}
+
+document.getElementById('btnCheck').addEventListener('click', checkAnswer);
+document.getElementById('btnPass').addEventListener('click', passAnswer);
+document.getElementById('answer').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') checkAnswer();
+});
+document.getElementById('btnReplay').addEventListener('click', ()=>{
+  document.getElementById('setupCard').style.display = 'flex';
+  document.getElementById('gameArea').classList.remove('show');
+});
+</script>
+</body>
+</html>
